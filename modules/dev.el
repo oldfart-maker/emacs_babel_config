@@ -30,12 +30,20 @@
 (require 'request)
 (require 'json)
 
-;; ChatGPT AI integration.
-(setq chatgpt-shell-save-session t)
-(global-set-key (kbd "C-c g") #'chatgpt-shell)
+;; Git integration.
+(use-package magit
+  :config
+  (setq magit-push-always-verify nil)
+  (setq git-commit-summary-max-length 50)
+  :bind
+  ("M-g" . magit-status))
 
-(setq chatgpt-shell-openai-key "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")
+(use-package treemacs-magit
+  :after treemacs magit)
 
-(setq chatgpt-shell-anthropic-key "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")
+(use-package ghub
+  :demand t
+  :after magit)  
 
-(setq chatgpt-shell-google-key "AIzaSyDkF0ZNBH208yLG48x_iv6kDVk0pjo6g3E")
+;; Enable Eglot automatically for certain modes
+(add-hook 'python-mode-hook #'eglot-ensure)

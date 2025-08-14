@@ -1,9 +1,8 @@
 (use-package dired
+  :straight (:type built-in)
   :ensure nil
   :commands (dired dired-jump)
   :bind (("C-x C-j" . dired-jump)))
-
-(setq dired-listing-switches "-alh --group-directories-first")
 
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))
@@ -12,12 +11,18 @@
 (use-package dired-open
   :config
   (setq dired-open-extensions
-	'(("png" . "feh")
-	  ("jpg" . "feh")
+	'(("png" . "imv")
+	  ("jpg" . "imv")
 	  ("pdf" . "zathura")
 	  ("mp4" . "mpv")
 	  ("mkv" . "mpv")
 	  ("html" . "floorp"))))
+
+;; Bind enter to launch associated file app.
+(with-eval-after-load 'dired
+;; Replace RET behavior
+(define-key dired-mode-map (kbd "RET") #'dired-open-file))
+
 
 (use-package dired-hide-dotfiles
   :hook (dired-mode . dired-hide-dotfiles-mode))

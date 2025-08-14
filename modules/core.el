@@ -1,40 +1,67 @@
-(setq inhibit-startup-screen t)
-(setq inhibit-startup-message t)
-(setq ring-bell-function 'ignore)
-(setq make-backup-files nil)
+;; Start quiet
+(setq inhibit-startup-screen t
+      inhibit-startup-message t
+      ring-bell-function #'ignore)
 
-;; Initialize package system
-(require 'package)
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                          ("org" . "https://orgmode.org/elpa/")
-                          ("elpa" . "https://elpa.gnu.org/packages/")))
-(package-initialize)
-(unless package-archive-contents
-  (package-refresh-contents))
+;; Files/backups
+(setq make-backup-files nil
+      auto-save-default nil
+      load-prefer-newer t)
 
-;; Ensure use-package is available
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
-
-(require 'use-package)
-(setq use-package-always-ensure t)
-
-;; Auto update packages
-(use-package auto-package-update
-  :custom
-  (auto-package-update-interval 7)
-  (auto-package-update-prompt-before-update t)
-  (auto-package-update-hide-results t)
-  :config
-  (auto-package-update-maybe)
-  (auto-package-update-at-time "09:00"))
-
-;; Clean up configuration file locations
-(use-package no-littering)
-
-;; Ensure auto-save files go into no-littering's designated auto-save dir
-(setq auto-save-file-name-transforms
-      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+;; UTF-8 everywhere
+(prefer-coding-system 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
 
 ;; Make ESC quit prompts
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+(global-set-key (kbd "<escape>") #'keyboard-escape-quit)
+
+;; Don’t let package.el auto-enable itself (we use straight.el)
+(setq package-enable-at-startup nil)
+
+
+;; straight.el bootstrap + use-package integration
+(defvar bootstrap-version)
+(let* ((user-dir user-emacs-directory)
+       (bootstrap-file
+        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-dir)))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;; Install use-package via straight and make it the default installer
+(straight-use-package 'use-package)
+(setq straight-use-package-by-default t)
+(require 'use-package)
+
+;; Housekeeping
+(use-package no-littering
+  :config
+  (setq auto-save-file-name-transforms
+        `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+
+;; Optional: Weekly straight update + lock versions at 09:00
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (run-at-time "09:00" (* 7 24 60 60)
+                         (lambda ()
+                           (message "Straight: pulling all & freezing versions…")
+                           (straight-pull-all)
+                           (straight-freeze-versions)
+                           (message "Straight: done.")))))
+
+;; Ensure environment variables inside Emacs look the same as in the shell.
+(use-package exec-path-from-shell
+  :init)
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+(when (daemonp)
+  (exec-path-from-shell-initialize))
+
+(provide 'core)
