@@ -1,11 +1,15 @@
 (defun niri-babel-build-and-deploy ()
-  "Tangle and deploy config.kdl to ~/.config/niri/config.kdl with 5 rotating backups."
+  "Tangle and deploy config.kdl to ~/.config/niri/config.kdl with 5 rotating backups.
+Also copy key_bindings.txt to ~/.config/niri/ if present."
   (interactive)
-  (let* ((org-file "~/projects/niri_babel_config/niri_config.org")
+  (let* ((org-file   "~/projects/niri_babel_config/niri_config.org")
          (output-dir "~/projects/niri_babel_config/")
          (output-file (expand-file-name "config.kdl" output-dir))
-         (target-file "~/.config/niri/config.kdl"))
-    
+         (kb-src      (expand-file-name "key_bindings.txt" output-dir))
+         (target-dir  (expand-file-name "~/.config/niri/"))
+         (target-file (expand-file-name "config.kdl" target-dir))
+         (kb-target   (expand-file-name "key_bindings.txt" target-dir)))
+
     ;; Execute all non-KDL blocks first
     (with-current-buffer (find-file-noselect org-file)
       (org-babel-map-src-blocks org-file
@@ -16,22 +20,28 @@
       ;; Tangle everything
       (org-babel-tangle))
 
-    ;; Backup rotation (keep last 5)
+    ;; Ensure target directory exists
+    (make-directory target-dir t)
+
+    ;; Backup rotation (keep last 5) for config.kdl
     (when (file-exists-p target-file)
-      ;; Shift old backups
       (dotimes (i 5)
         (let* ((n (- 5 i))
                (old (format "%s.%03d" target-file n))
                (new (format "%s.%03d" target-file (1+ n))))
           (when (file-exists-p old)
             (rename-file old new t))))
-      ;; Save current file as .001
       (copy-file target-file (format "%s.001" target-file) t))
 
-    ;; Deploy new config
+    ;; Deploy new config.kdl
     (when (file-exists-p output-file)
       (copy-file output-file target-file t)
-      (message "Tangled and deployed config.kdl to %s" target-file))))
+      (message "Tangled and deployed config.kdl to %s" target-file))
+
+    ;; Copy key_bindings.txt if present
+    (when (file-exists-p kb-src)
+      (copy-file kb-src kb-target t)
+      (message "Copied key_bindings.txt to %s" kb-target))))
 
 (defun emacs-babel-build-and-deploy ()
   "Tangle and deploy Emacs config to proper env directory with backup and timestamp."
