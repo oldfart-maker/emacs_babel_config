@@ -166,3 +166,20 @@ Also copy key_bindings.txt to ~/.config/niri/ if present."
     (if (file-directory-p mount-point)
         (dired mount-point)
       (message "Mount point does not exist or is not accessible: %s" mount-point))))
+
+(defun my/ob-remove-all-results ()
+  "Delete every #+RESULTS in the current Org buffer.
+If a region is active, operate only within that region."
+  (interactive)
+  (require 'ob)
+  (save-excursion
+    (save-restriction
+      (when (use-region-p)
+        (narrow-to-region (region-beginning) (region-end)))
+      (let ((n 0))
+        (org-babel-map-src-blocks nil
+          ;; Here, point is at the #+begin_src line.
+          (when (org-babel-where-is-src-block-result)
+            (org-babel-remove-result)
+            (cl-incf n)))
+        (message "Removed %d result block(s)." n)))))
