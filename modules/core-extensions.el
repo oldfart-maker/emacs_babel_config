@@ -57,3 +57,45 @@
   ([remap describe-command] . helpful-command)
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
+
+;; Set up leader keys.
+(use-package general
+  :demand t
+  :config
+  (general-define-key
+   :keymaps 'global
+   :prefix-map 'my/leader-map
+   :prefix "M-m")
+
+  (general-create-definer my/leader
+    :keymaps 'my/leader-map)
+
+  (global-set-key (kbd "M-i") #'back-to-indentation))
+
+;; Define a macro that builds sub-menus off M-m using `my/leader`
+(defmacro +general-global-menu! (name prefix-key &rest body)
+  "Create a definer named my/global-NAME wrapping `my/leader`.
+Create prefix map: my/global-NAME-map. Bind BODY under M-m PREFIX-KEY."
+  (declare (indent 2))
+  (let* ((sym (intern (format "my/global-%s" name)))
+         (prefix-map (intern (format "my/global-%s-map" name))))
+    `(progn
+       (general-create-definer ,sym
+         :wrapping my/leader
+         :prefix-map ',prefix-map
+         :prefix ,prefix-key
+         :wk-full-keys nil
+         "" '(:ignore t :which-key ,name))
+       (,sym ,@body))))
+
+;; Bookmark leader keys.
+(use-package bookmark
+:straight nil
+:custom
+(bookmark-save-flag 1)
+(bookmark-sort-flag t)
+:config
+(+general-global-menu! "bookmark" "b"
+  "j" '(bookmark-jump   :which-key "jump")
+  "s" '(bookmark-set    :which-key "set")
+  "r" '(bookmark-rename :which-key "rename")))

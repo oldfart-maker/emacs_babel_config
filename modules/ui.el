@@ -219,3 +219,45 @@
       :requires dashboard
       :init
       (global-page-break-lines-mode))
+
+  ;; Window management leader keys.
+  (require 'windmove)
+
+  (+general-global-menu! "window" "w"
+    "?" 'split-window-vertically            ;; or use split-window-below
+    "=" 'balance-windows
+    "/" 'split-window-horizontally          ;; or use split-window-right
+    "O" 'delete-other-windows
+    "X" '((lambda () (interactive)
+            (call-interactively #'other-window)
+            (kill-buffer-and-window))
+          :which-key "kill other buf+win")
+    "d" 'delete-window
+    "h" 'windmove-left
+    "j" 'windmove-down
+    "k" 'windmove-up
+    "l" 'windmove-right
+    "o" 'other-window
+    "t" 'window-toggle-side-windows
+    "."  '(:ignore t :which-key "resize")   ;; <-- fixed :ignore
+    ".h" '((lambda () (interactive)
+             (call-interactively (if (window-prev-sibling)
+                                     #'enlarge-window-horizontally
+                                   #'shrink-window-horizontally)))
+           :which-key "divider left")
+    ".l" '((lambda () (interactive)
+             (call-interactively (if (window-next-sibling)
+                                     #'enlarge-window-horizontally
+                                   #'shrink-window-horizontally)))
+           :which-key "divider right")
+    ".j" '((lambda () (interactive)
+             (call-interactively (if (window-next-sibling)
+                                     #'enlarge-window
+                                   #'shrink-window)))
+           :which-key "divider up")
+    ".k" '((lambda () (interactive)
+             (call-interactively (if (window-prev-sibling)
+                                     #'enlarge-window
+                                   #'shrink-window)))
+           :which-key "divider down")
+    "x" 'kill-buffer-and-window)

@@ -43,45 +43,6 @@ Also copy key_bindings.txt to ~/.config/niri/ if present."
       (copy-file kb-src kb-target t)
       (message "Copied key_bindings.txt to %s" kb-target))))
 
-(defun emacs-babel-build-and-deploy ()
-  "Tangle and deploy Emacs config to proper env directory with backup and timestamp."
-  (interactive)
-  (let* ((target-env "emacs-prod")  ;; Assumes `target-env` is a custom function
-         (org-file "~/projects/emacs_babel_config/emacs_config.org")
-         (modules-dir (expand-file-name (format "~/.config/%s/modules" target-env)))
-         (src-dir (expand-file-name "~/projects/emacs_babel_config/modules/"))
-         (timestamp-file (expand-file-name
-                          (format "~/.config/%s/last_deployed.org" target-env))))
-
-    ;; Debug
-    (message "Target env: %s" target-env)
-
-    ;; Run non-Elisp blocks to update values
-    (with-current-buffer (find-file-noselect org-file)
-      (org-babel-map-src-blocks org-file
-        (let* ((info (org-babel-get-src-block-info 'light)))
-          (when info
-            (let ((lang (nth 0 info)))
-              (unless (string= lang "emacs-lisp")
-                (org-babel-execute-src-block))))))
-
-    ;; Tangle all blocks
-    (org-babel-tangle)
-
-    ;; Copy modules
-    (when (file-directory-p src-dir)
-      (make-directory modules-dir t)
-      (dolist (file (directory-files src-dir t "^[^.].*"))  ; skip dotfiles
-        (copy-file file
-                   (expand-file-name (file-name-nondirectory file) modules-dir)
-                   t)))
-
-    ;; Write timestamp
-    (with-temp-file timestamp-file
-      (insert (format "* Last Deployed\n\nDeployed at: %s\n" (current-time-string))))
-
-    (message "Emacs config deployed to %s" modules-dir))))
-
 (require 'image-dired)
 
 (defun my/image-dired-copy-and-exit ()
@@ -183,3 +144,54 @@ If a region is active, operate only within that region."
             (org-babel-remove-result)
             (cl-incf n)))
         (message "Removed %d result block(s)." n)))))
+
+(defun emacs-babel-build-and-deploy ()
+  "Tangle and deploy Emacs config to proper env directory with backup and timestamp."
+  (interactive)
+  (let* ((target-env "emacs-prod")  ;; Assumes `target-env` is a custom function
+         (org-file "~/projects/emacs_babel_config/emacs_config.org")
+         (modules-dir (expand-file-name (format "~/.config/%s/modules" target-env)))
+         (src-dir (expand-file-name "~/projects/emacs_babel_config/modules/"))
+         (timestamp-file (expand-file-name
+                          (format "~/.config/%s/last_deployed.org" target-env))))
+
+    ;; Debug
+    (message "Target env: %s" target-env)
+
+    ;; Run non-Elisp blocks to update values
+    (with-current-buffer (find-file-noselect org-file)
+      (org-babel-map-src-blocks org-file
+        (let* ((info (org-babel-get-src-block-info 'light)))
+          (when info
+            (let ((lang (nth 0 info)))
+              (unless (string= lang "emacs-lisp")
+                (org-babel-execute-src-block))))))
+
+    ;; Tangle all blocks
+    (org-babel-tangle)
+
+    ;; Copy modules
+    (when (file-directory-p src-dir)
+      (make-directory modules-dir t)
+      (dolist (file (directory-files src-dir t "^[^.].*"))  ; skip dotfiles
+        (copy-file file
+                   (expand-file-name (file-name-nondirectory file) modules-dir)
+                   t)))
+
+    ;; Also copy init.el and early-init.el into the target env dir
+    (let* ((target-dir (file-name-directory modules-dir))
+           (project-root (file-name-directory org-file))
+           (init-src  (expand-file-name "init.el" project-root))
+           (early-src (expand-file-name "early-init.el" project-root))
+           (init-dest  (expand-file-name "init.el" target-dir))
+           (early-dest (expand-file-name "early-init.el" target-dir)))
+      (when (file-exists-p init-src)
+	(copy-file init-src init-dest t))
+      (when (file-exists-p early-src)
+	(copy-file early-src early-dest t)))
+
+    ;; Write timestamp
+    (with-temp-file timestamp-file
+      (insert (format "* Last Deployed\n\nDeployed at: %s\n" (current-time-string))))
+
+    (message "Emacs config deployed to %s" modules-dir))))

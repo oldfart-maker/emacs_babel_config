@@ -20,7 +20,6 @@
 ;; Don’t let package.el auto-enable itself (we use straight.el)
 (setq package-enable-at-startup nil)
 
-
 ;; straight.el bootstrap + use-package integration
 (defvar bootstrap-version)
 (let* ((user-dir user-emacs-directory)
