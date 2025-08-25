@@ -1,6 +1,7 @@
 (use-package dired
     :straight (:type built-in)
     :ensure nil
+    :custom (dired-listing-switches "-alh --group-directories-first")
     :commands (dired dired-jump)
     :bind (("C-x C-j" . dired-jump)))
 

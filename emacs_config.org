@@ -1,14 +1,26 @@
 * Emacs Literate Config
 ** Notes
+This is my second attempt at usin a literate config. The first
+was with niri so that I could see if this approach gave me
+additional flexibility due to limitations in config.kdl. It
+is overkill for niri. Now I am trying it for emacs and I think
+it is a better use, mostly for the documentation. This is also a
+great way to learn about emacs modules etc. This config has
+been curated from a number of literate configs on github.com
+
 After executing tangle, copy the output files to the target
-directory and if adding a new section make sure to update
-the init.el file in the target directory:
+directory and if adding a new section make sure to update the
+init.el code block:
 
 cp -r ./modules/* ~/.config/[target-env]/modules/
+cp -r init.el early-config.el ~/.config/[target-env]/
 
 Example
 
 cp -r ~/projects/emacs_babel_config/modules/* ~/.config/emacs-prod/modules/
+cp -r ~/projects/emacs_babel_config *.el ~/.config/emacs-prod/
+
+Automated Function: emacs-babel-build-and-deploy
    
 * Environment
 
@@ -86,7 +98,12 @@ Emacs Custom File
 : t
 
 * Init.el and Early-Init.el configurations.
-Init.el
+This is my first literate config. I used seperate .el files based on
+category. I will probably consolidate them back into init.el
+and earl-init.el. I'm have not seen any benefit to using mulitple
+files and have run across a few issues in that if I want to
+eval-buffer one of these there may be dependencies that have not
+been loaded. As of 8/18/2025 I am an emacs noobie.
 #+BEGIN_SRC emacs-lisp :eval never :tangle init.el
   (setq user-emacs-directory
         (or (file-name-directory (or load-file-name buffer-file-name))
@@ -101,6 +118,7 @@ Init.el
   (load (expand-file-name "modules/ai.el" user-emacs-directory))
   (load (expand-file-name "modules/system-os.el" user-emacs-directory))
   (load (expand-file-name "modules/email.el" user-emacs-directory))
+  (load (expand-file-name "modules/editing-text.el" user-emacs-directory))  
   (load (expand-file-name "modules/my-functions.el" user-emacs-directory))
   (load (expand-file-name "modules/remote.el" user-emacs-directory))
   #+END_SRC
@@ -191,217 +209,213 @@ environments (e.g. laptop, desktop, pi).
 Core extenstions emacs configuration. Ideally these will be the same across all environments.
 This section also inlcudes the leader key setup, which for some functions I feel is very helpful.
 #+BEGIN_SRC emacs-lisp :eval never :tangle ./modules/core-extensions.el
-  ;; Enable which-key for keybinding discovery
-  (use-package which-key
-    :defer 0
-    :diminish
-    :config
-    (which-key-mode))
+    ;; Enable which-key for keybinding discovery
+    (use-package which-key
+      :defer 0
+      :diminish
+      :config
+      (which-key-mode))
 
-  ;; Completion and search system
-  (use-package ivy
-    :diminish
-    :bind (("C-s" . swiper)
-           :map ivy-minibuffer-map
-           ("TAB" . ivy-alt-done)
-           ("C-l" . ivy-alt-done)
-           ("C-j" . ivy-next-line)
-           ("C-k" . ivy-previous-line)
-           :map ivy-switch-buffer-map
-           ("C-k" . ivy-previous-line)
-           ("C-l" . ivy-done)
-           ("C-d" . ivy-switch-buffer-kill)
-           :map ivy-reverse-i-search-map
-           ("C-k" . ivy-previous-line)
-           ("C-d" . ivy-reverse-i-search-kill))
-    :config
-    (ivy-mode 1))
+    ;; Completion and search system
+    (use-package ivy
+      :diminish
+      :bind (("C-s" . swiper)
+             :map ivy-minibuffer-map
+             ("TAB" . ivy-alt-done)
+             ("C-l" . ivy-alt-done)
+             ("C-j" . ivy-next-line)
+             ("C-k" . ivy-previous-line)
+             :map ivy-switch-buffer-map
+             ("C-k" . ivy-previous-line)
+             ("C-l" . ivy-done)
+             ("C-d" . ivy-switch-buffer-kill)
+             :map ivy-reverse-i-search-map
+             ("C-k" . ivy-previous-line)
+             ("C-d" . ivy-reverse-i-search-kill))
+      :config
+      (ivy-mode 1))
 
-  (use-package counsel
-    :bind (("C-M-j" . counsel-switch-buffer)
-           :map minibuffer-local-map
-           ("C-r" . counsel-minibuffer-history))
-    :custom
-    (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
-    :config
-    (counsel-mode 1))
+    (use-package counsel
+      :bind (("C-M-j" . counsel-switch-buffer)
+             :map minibuffer-local-map
+             ("C-r" . counsel-minibuffer-history))
+      :custom
+      (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
+      :config
+      (counsel-mode 1))
 
-  (use-package ivy-rich
+    (use-package ivy-rich
+      :after counsel
+      :init
+      (ivy-rich-mode 1))
+
+    ;; Use to prioritize command history based on usage.
+    (use-package ivy-prescient
     :after counsel
-    :init
-    (ivy-rich-mode 1))
-
-  ;; Use to prioritize command history based on usage.
-  (use-package ivy-prescient
-  :after counsel
-  :custom
-  (ivy-prescient-enable-filtering nil)
-  :config
-  ;; Uncomment the following line to have sorting remembered across sessions!
-  ;: (prescient-persist-mode 1)
-  (ivy-prescient-mode 1))
-
-  (use-package helpful
     :custom
-    (counsel-describe-function-function #'helpful-callable)
-    (counsel-describe-variable-function #'helpful-variable)
-    :bind
-    ([remap describe-function] . counsel-describe-function)
-    ([remap describe-command] . helpful-command)
-    ([remap describe-variable] . counsel-describe-variable)
-    ([remap describe-key] . helpful-key))
-
-  ;; Set up leader keys.
-  (use-package general
-    :demand t
+    (ivy-prescient-enable-filtering nil)
     :config
-    (general-define-key
-     :keymaps 'global
-     :prefix-map 'my/leader-map
-     :prefix "M-m")
+    ;; Uncomment the following line to have sorting remembered across sessions!
+    ;: (prescient-persist-mode 1)
+    (ivy-prescient-mode 1))
 
-    (general-create-definer my/leader
-      :keymaps 'my/leader-map)
+    (use-package helpful
+      :custom
+      (counsel-describe-function-function #'helpful-callable)
+      (counsel-describe-variable-function #'helpful-variable)
+      :bind
+      ([remap describe-function] . counsel-describe-function)
+      ([remap describe-command] . helpful-command)
+      ([remap describe-variable] . counsel-describe-variable)
+      ([remap describe-key] . helpful-key))
 
-    (global-set-key (kbd "M-i") #'back-to-indentation))
+    ;; Set up leader keys.
+    (use-package general
+      :demand t
+      :config
+      (general-define-key
+       :keymaps 'global
+       :prefix-map 'my/leader-map
+       :prefix "M-m")
 
-  ;; Define a macro that builds sub-menus off M-m using `my/leader`
-  (defmacro +general-global-menu! (name prefix-key &rest body)
-    "Create a definer named my/global-NAME wrapping `my/leader`.
-  Create prefix map: my/global-NAME-map. Bind BODY under M-m PREFIX-KEY."
-    (declare (indent 2))
-    (let* ((sym (intern (format "my/global-%s" name)))
-           (prefix-map (intern (format "my/global-%s-map" name))))
-      `(progn
-         (general-create-definer ,sym
-           :wrapping my/leader
-           :prefix-map ',prefix-map
-           :prefix ,prefix-key
-           :wk-full-keys nil
-           "" '(:ignore t :which-key ,name))
-         (,sym ,@body))))
+      (general-create-definer my/leader
+        :keymaps 'my/leader-map)
+
+      (global-set-key (kbd "M-i") #'back-to-indentation))
+
+    ;; Define a macro that builds sub-menus off M-m using `my/leader`
+    (defmacro +general-global-menu! (name prefix-key &rest body)
+      "Create a definer named my/global-NAME wrapping `my/leader`.
+    Create prefix map: my/global-NAME-map. Bind BODY under M-m PREFIX-KEY."
+      (declare (indent 2))
+      (let* ((sym (intern (format "my/global-%s" name)))
+             (prefix-map (intern (format "my/global-%s-map" name))))
+        `(progn
+           (general-create-definer ,sym
+             :wrapping my/leader
+             :prefix-map ',prefix-map
+             :prefix ,prefix-key
+             :wk-full-keys nil
+             "" '(:ignore t :which-key ,name))
+           (,sym ,@body))))
 
   ;; Bookmark leader keys.
   (use-package bookmark
-  :straight nil
-  :custom
-  (bookmark-save-flag 1)
-  (bookmark-sort-flag t)
-  :config
-  (+general-global-menu! "bookmark" "b"
-    "j" '(bookmark-jump   :which-key "jump")
-    "s" '(bookmark-set    :which-key "set")
-    "r" '(bookmark-rename :which-key "rename")))
+    :straight nil
+    :custom
+    (bookmark-save-flag 1)   ;; autosave bookmarks after each change
+    (bookmark-sort-flag t)   ;; keep bookmarks sorted by name
+    :config
+    (+general-global-menu! "bookmark" "b"
+      "j" '(bookmark-jump       :which-key "jump")
+      "s" '(bookmark-set        :which-key "set")
+      "l" '(bookmark-bmenu-list :which-key "list")
+      "d" '(bookmark-delete     :which-key "delete")
+      "r" '(bookmark-rename     :which-key "rename")))
 
-#+END_SRC
+  ;; Faster global chords
+  (require 'bookmark)
+  (global-set-key (kbd "C-x j")   #'bookmark-jump)       ;; jump
+  (global-set-key (kbd "C-x J")   #'bookmark-bmenu-list) ;; list/manage
+  (global-set-key (kbd "C-x M-j") #'bookmark-set)        ;; set
+  #+END_SRC
 
 * System & OS Integration
 
 System / OS integration. These could change between environments.
-#+BEGIN_SRC emacs-lisp :results value :noweb yes
-  ;; Unhide dotfiles.
-  (cond
-   ((string= <<target-os()>> "archlinux")
-    "(setq dired-listing-switches \"-alh --group-directories-first\")")
-   ((string= <<target-os()>> "macos")
-    "(setq dired-listing-switches \"-alh\")")
-   (t "Unknown OS"))
-#+END_SRC
-
-#+RESULTS:
-: (setq dired-listing-switches "-alh --group-directories-first")
 
 Dired configurations.
 #+BEGIN_SRC emacs-lisp :eval never :noweb yes :tangle ./modules/system-os.el
-  (use-package dired
-    :straight (:type built-in)
-    :ensure nil
-    :commands (dired dired-jump)
-    :bind (("C-x C-j" . dired-jump)))
+    (use-package dired
+      :straight (:type built-in)
+      :ensure nil
+      :custom (dired-listing-switches "-alh --group-directories-first")
+      :commands (dired dired-jump)
+      :bind (("C-x C-j" . dired-jump)))
 
-;; Leader menu for Dired: M-m d …
-(with-eval-after-load 'dired
-  ;; Only if general.el is available
-  (when (require 'general nil t)
-    (general-define-key
-     :keymaps 'dired-mode-map
-     :prefix "M-m d"
-     "" '(:ignore t :which-key "dired")
-
-     ;; open / jump
-     "d" '(dired :which-key "open dired")
-     "." '((lambda () (interactive) (dired default-directory)) :which-key "here")
-     "j" '(dired-jump :which-key "jump to file")
-     "J" '(dired-jump-other-window :which-key "jump (other win)")
-
-     ;; view / listing
-     "r" '(revert-buffer :which-key "refresh")
-     "h" '(dired-hide-details-mode :which-key "toggle details")
-     "o" '(dired-omit-mode :which-key "toggle dotfiles")
-     "s" '(dired-sort-toggle-or-edit :which-key "sort")
-
-     ;; edit names (wdired)
-     "e" '(wdired-change-to-wdired-mode :which-key "edit names")
-
-     ;; create / file ops
-     "+" '(dired-create-directory :which-key "mkdir")
-     "C" '(dired-do-copy :which-key "copy")
-     "R" '(dired-do-rename :which-key "rename/move")
-     "D" '(dired-do-delete :which-key "delete")
-     "X" '(dired-do-flagged-delete :which-key "delete flagged")
-     "z" '(dired-do-compress :which-key "compress")
-     "T" '(dired-do-touch :which-key "touch mtime")
-     "M" '(dired-do-chmod :which-key "chmod")
-     "O" '(dired-do-chown :which-key "chown")
-
-     ;; marking
-     "m" '(dired-mark :which-key "mark")
-     "u" '(dired-unmark :which-key "unmark")
-     "U" '(dired-unmark-all-marks :which-key "unmark all")
-     "t" '(dired-toggle-marks :which-key "toggle marks")
-
-     ;; search / replace
-     "f" '(dired-do-find-regexp :which-key "find regexp")
-     "Q" '(dired-do-find-regexp-and-replace :which-key "query replace")
-
-     ;; shell
-     "!" '(dired-do-shell-command :which-key "shell cmd")
-     "&" '(dired-do-async-shell-command :which-key "async shell"))))
-
-  (use-package all-the-icons-dired
-    :hook (dired-mode . all-the-icons-dired-mode))
-
-  ;; Launch apps based on content.
-  (use-package dired-open
-    :config
-    (setq dired-open-extensions
-  	'(("png" . "imv")
-  	  ("jpg" . "imv")
-  	  ("pdf" . "zathura")
-  	  ("mp4" . "mpv")
-  	  ("mkv" . "mpv")
-  	  ("html" . "floorp"))))
-
-  ;; Bind enter to launch associated file app.
+  ;; Leader menu for Dired: M-m d …
   (with-eval-after-load 'dired
-  ;; Replace RET behavior
-  (define-key dired-mode-map (kbd "RET") #'dired-open-file))
+    ;; Only if general.el is available
+    (when (require 'general nil t)
+      (general-define-key
+       :keymaps 'dired-mode-map
+       :prefix "M-m d"
+       "" '(:ignore t :which-key "dired")
+
+       ;; open / jump
+       "d" '(dired :which-key "open dired")
+       "." '((lambda () (interactive) (dired default-directory)) :which-key "here")
+       "j" '(dired-jump :which-key "jump to file")
+       "J" '(dired-jump-other-window :which-key "jump (other win)")
+
+       ;; view / listing
+       "r" '(revert-buffer :which-key "refresh")
+       "h" '(dired-hide-details-mode :which-key "toggle details")
+       "o" '(dired-omit-mode :which-key "toggle dotfiles")
+       "s" '(dired-sort-toggle-or-edit :which-key "sort")
+
+       ;; edit names (wdired)
+       "e" '(wdired-change-to-wdired-mode :which-key "edit names")
+
+       ;; create / file ops
+       "+" '(dired-create-directory :which-key "mkdir")
+       "C" '(dired-do-copy :which-key "copy")
+       "R" '(dired-do-rename :which-key "rename/move")
+       "D" '(dired-do-delete :which-key "delete")
+       "X" '(dired-do-flagged-delete :which-key "delete flagged")
+       "z" '(dired-do-compress :which-key "compress")
+       "T" '(dired-do-touch :which-key "touch mtime")
+       "M" '(dired-do-chmod :which-key "chmod")
+       "O" '(dired-do-chown :which-key "chown")
+
+       ;; marking
+       "m" '(dired-mark :which-key "mark")
+       "u" '(dired-unmark :which-key "unmark")
+       "U" '(dired-unmark-all-marks :which-key "unmark all")
+       "t" '(dired-toggle-marks :which-key "toggle marks")
+
+       ;; search / replace
+       "f" '(dired-do-find-regexp :which-key "find regexp")
+       "Q" '(dired-do-find-regexp-and-replace :which-key "query replace")
+
+       ;; shell
+       "!" '(dired-do-shell-command :which-key "shell cmd")
+       "&" '(dired-do-async-shell-command :which-key "async shell"))))
+
+    (use-package all-the-icons-dired
+      :hook (dired-mode . all-the-icons-dired-mode))
+
+    ;; Launch apps based on content.
+    (use-package dired-open
+      :config
+      (setq dired-open-extensions
+    	'(("png" . "imv")
+    	  ("jpg" . "imv")
+    	  ("pdf" . "zathura")
+    	  ("mp4" . "mpv")
+    	  ("mkv" . "mpv")
+    	  ("html" . "floorp"))))
+
+    ;; Bind enter to launch associated file app.
+    (with-eval-after-load 'dired
+    ;; Replace RET behavior
+    (define-key dired-mode-map (kbd "RET") #'dired-open-file))
 
 
-  (use-package dired-hide-dotfiles
-    :hook (dired-mode . dired-hide-dotfiles-mode))
+    (use-package dired-hide-dotfiles
+      :hook (dired-mode . dired-hide-dotfiles-mode))
 
-  ;; Must have dired extensions
-  (use-package peep-dired
-    :ensure t
-    :bind (:map dired-mode-map
-                ("P" . peep-dired))
-    :hook (peep-dired-mode . (lambda () (setq-local image-dired-display-image-buffer 'other))))
+    ;; Must have dired extensions
+    (use-package peep-dired
+      :ensure t
+      :bind (:map dired-mode-map
+                  ("P" . peep-dired))
+      :hook (peep-dired-mode . (lambda () (setq-local image-dired-display-image-buffer 'other))))
 
-  (use-package dired-subtree
-    :ensure t
-    :bind (:map dired-mode-map
-                ("<tab>" . dired-subtree-toggle)))
+    (use-package dired-subtree
+      :ensure t
+      :bind (:map dired-mode-map
+                  ("<tab>" . dired-subtree-toggle)))
 #+END_SRC
 
 Terminal
@@ -952,6 +966,179 @@ My AI envrionments.
     :commands (ollama-buddy-chat ollama-buddy-prompt-region ollama-buddy-prompt-buffer)
     :config)
         
+#+END_SRC
+
+* Text editing
+
+I've added this section for configurations that are specific to text edit,
+for example fill-column options.
+
+#+BEGIN_SRC emacs-lisp :eval never :tangle ./modules/editing-text.el
+  ;; --- Defaults ---------------------------------------------------------------
+
+  (setq-default fill-column 80)              ;; used for hard wrap (auto-fill / M-q)
+  (setq sentence-end-double-space nil)
+  (setq comment-auto-fill-only-comments t)
+
+  ;; Show a guide in code buffers (redundant for prose when using VFC)
+  (add-hook 'prog-mode-hook #'display-fill-column-indicator-mode)
+
+  ;; --- Prose wrapping helpers -------------------------------------------------
+
+  (defvar my/prose-width 88
+    "Preferred visual text width for prose buffers (Org/Markdown/Text).")
+
+  (defun my/enable-prose-wrapping ()
+    "Soft-wrap at `my/prose-width` with centered text (no hard line breaks)."
+    (setq-local truncate-lines nil)
+    (setq-local visual-fill-column-width my/prose-width)
+    (visual-line-mode 1)
+    (when (boundp 'display-fill-column-indicator-mode)
+      (display-fill-column-indicator-mode 0))
+    (when (fboundp 'visual-fill-column-mode)
+      (visual-fill-column-mode 1)))
+
+  (defun my/text-soft-wrap ()
+    "Soft wrap at window/visual width (no hard breaks)."
+    (interactive)
+    (setq-local truncate-lines nil)
+    (visual-line-mode 1)
+    (when (fboundp 'visual-fill-column-mode)
+      (visual-fill-column-mode 1))
+    (message "wrap: soft (visual)%s"
+             (if (bound-and-true-p visual-fill-column-mode)
+                 (format " @ %d" (or visual-fill-column-width my/prose-width))
+               "")))
+
+  (defun my/text-hard-wrap ()
+    "Hard wrap at `fill-column` (auto-fill)."
+    (interactive)
+    (visual-line-mode 0)
+    (when (fboundp 'visual-fill-column-mode)
+      (visual-fill-column-mode -1))
+    (auto-fill-mode 1)
+    (message "wrap: hard (auto-fill) @ %d" fill-column))
+
+  (defun my/toggle-wrap ()
+    "Cycle: off → soft → hard."
+    (interactive)
+    (cond
+     ((and (not visual-line-mode) (not auto-fill-function))
+      (my/text-soft-wrap))
+     ((and visual-line-mode (not auto-fill-function))
+      (my/text-hard-wrap))
+     (t
+      (visual-line-mode 0)
+      (when (fboundp 'visual-fill-column-mode)
+        (visual-fill-column-mode -1))
+      (auto-fill-mode 0)
+      (message "wrap: off"))))
+
+  (defun my/set-fill-column (n)
+    "Set buffer-local `fill-column` to N and update indicator."
+    (interactive "nFill column: ")
+    (setq-local fill-column n
+                display-fill-column-indicator-column n)
+    (when (bound-and-true-p display-fill-column-indicator-mode)
+      (force-window-update (current-buffer)))
+    (message "fill-column → %d" n))
+
+  ;; --- visual-fill-column (soft wrap at fixed width) --------------------------
+
+  (use-package visual-fill-column
+    :straight t
+    :commands (visual-fill-column-mode visual-fill-column-split-window-sensibly)
+    :init
+    ;; Center text; set to nil if you prefer left-aligned.
+    (setq visual-fill-column-center-text nil)
+    ;; Make window splitting respect VFC margins.
+    (setq split-window-preferred-function
+          #'visual-fill-column-split-window-sensibly)
+    :hook
+    ((text-mode markdown-mode org-mode) . my/enable-prose-wrapping))
+
+  ;; Convenience commands to adjust visual width on the fly
+  (defun my/vfc-set-width (n)
+    "Set the visual body width to N columns in this buffer."
+    (interactive "nVisual width (cols): ")
+    (setq-local visual-fill-column-width n)
+    (when (bound-and-true-p visual-fill-column-mode)
+      (visual-fill-column-mode -1)
+      (visual-fill-column-mode 1))
+    (message "visual width → %d" n))
+
+  (defun my/vfc-wider (n)
+    "Widen visual body by prefix N (default 2) columns."
+    (interactive "p")
+    (my/vfc-set-width (+ (or visual-fill-column-width my/prose-width 80)
+                         (or n 2))))
+
+  (defun my/vfc-narrower (n)
+    "Narrow visual body by prefix N (default 2) columns (min 40)."
+    (interactive "p")
+    (my/vfc-set-width (max 40
+                           (- (or visual-fill-column-width my/prose-width 80)
+                              (or n 2)))))
+
+  (defun my/vfc-toggle ()
+    "Toggle visual-fill-column + visual-line for this buffer."
+    (interactive)
+    (if (bound-and-true-p visual-fill-column-mode)
+        (progn
+          (visual-fill-column-mode -1)
+          (visual-line-mode -1)
+          (message "visual-fill-column: off"))
+      (my/enable-prose-wrapping)
+      (message "visual-fill-column: on @ %d"
+               (or visual-fill-column-width my/prose-width))))
+
+  ;; --- Org-specific -----------------------------------------------------------
+
+  ;; Org starts truncated by default; disable so wrapping works as expected.
+  (setq org-startup-truncated nil)
+
+  ;; --- Leader keys ------------------------------------------------------------
+  (+general-global-menu! "text" "t"
+    ;; Visual fill controls
+    "v" 'my/vfc-toggle
+    "V" 'my/vfc-set-width
+    "]" 'my/vfc-wider
+    "[" 'my/vfc-narrower
+
+    ;; Wrap style
+    "w" 'my/toggle-wrap
+    "s" 'my/text-soft-wrap
+    "h" 'my/text-hard-wrap
+
+    ;; Fill column
+    "c" 'my/set-fill-column)
+
+  ;; Markdown mode
+(use-package markdown-mode
+  :straight t
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'"       . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init
+  ;; Optional: use pandoc for conversions from within markdown-mode
+  ;; (setq markdown-command "pandoc -f gfm -t html")
+  (setq markdown-hide-markup t          ; cleaner look (toggle: markdown-toggle-markup-hiding)
+        markdown-fontify-code-blocks-natively t
+        markdown-enable-math t)
+  :hook
+  ((markdown-mode gfm-mode) . my/enable-prose-wrapping))
+
+;; --- Leader keys (uses your +general-global-menu! macro) -------------------
+(+general-global-menu! "markdown" "m"
+  "p" 'markdown-live-preview-mode      ;; start/stop built-in HTML preview
+  "b" 'markdown-insert-bold
+  "i" 'markdown-insert-italic
+  "c" 'markdown-insert-code
+  "l" 'markdown-insert-link
+  "h" 'markdown-toggle-markup-hiding)
+
+  (provide 'editing-text)
+  ;;; editing-text.el ends here  
 #+END_SRC
 
 * My Functions

@@ -11,5 +11,6 @@
 (load (expand-file-name "modules/ai.el" user-emacs-directory))
 (load (expand-file-name "modules/system-os.el" user-emacs-directory))
 (load (expand-file-name "modules/email.el" user-emacs-directory))
+(load (expand-file-name "modules/editing-text.el" user-emacs-directory))  
 (load (expand-file-name "modules/my-functions.el" user-emacs-directory))
 (load (expand-file-name "modules/remote.el" user-emacs-directory))
