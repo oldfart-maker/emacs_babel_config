@@ -20,7 +20,7 @@ Example
 cp -r ~/projects/emacs_babel_config/modules/* ~/.config/emacs-prod/modules/
 cp -r ~/projects/emacs_babel_config *.el ~/.config/emacs-prod/
 
-Automated Function: emacs-babel-build-and-deploy
+Emacs Function: emacs-babel-build-and-deploy
    
 * Environment
 
@@ -209,116 +209,116 @@ environments (e.g. laptop, desktop, pi).
 Core extenstions emacs configuration. Ideally these will be the same across all environments.
 This section also inlcudes the leader key setup, which for some functions I feel is very helpful.
 #+BEGIN_SRC emacs-lisp :eval never :tangle ./modules/core-extensions.el
-    ;; Enable which-key for keybinding discovery
-    (use-package which-key
-      :defer 0
-      :diminish
-      :config
-      (which-key-mode))
+      ;; Enable which-key for keybinding discovery
+      (use-package which-key
+        :defer 0
+        :diminish
+        :config
+        (which-key-mode))
 
-    ;; Completion and search system
-    (use-package ivy
-      :diminish
-      :bind (("C-s" . swiper)
-             :map ivy-minibuffer-map
-             ("TAB" . ivy-alt-done)
-             ("C-l" . ivy-alt-done)
-             ("C-j" . ivy-next-line)
-             ("C-k" . ivy-previous-line)
-             :map ivy-switch-buffer-map
-             ("C-k" . ivy-previous-line)
-             ("C-l" . ivy-done)
-             ("C-d" . ivy-switch-buffer-kill)
-             :map ivy-reverse-i-search-map
-             ("C-k" . ivy-previous-line)
-             ("C-d" . ivy-reverse-i-search-kill))
-      :config
-      (ivy-mode 1))
+      ;; Completion and search system
+      (use-package ivy
+        :diminish
+        :bind (("C-s" . swiper)
+               :map ivy-minibuffer-map
+               ("TAB" . ivy-alt-done)
+               ("C-l" . ivy-alt-done)
+               ("C-j" . ivy-next-line)
+               ("C-k" . ivy-previous-line)
+               :map ivy-switch-buffer-map
+               ("C-k" . ivy-previous-line)
+               ("C-l" . ivy-done)
+               ("C-d" . ivy-switch-buffer-kill)
+               :map ivy-reverse-i-search-map
+               ("C-k" . ivy-previous-line)
+               ("C-d" . ivy-reverse-i-search-kill))
+        :config
+        (ivy-mode 1))
 
-    (use-package counsel
-      :bind (("C-M-j" . counsel-switch-buffer)
-             :map minibuffer-local-map
-             ("C-r" . counsel-minibuffer-history))
-      :custom
-      (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
-      :config
-      (counsel-mode 1))
+      (use-package counsel
+        :bind (("C-M-j" . counsel-switch-buffer)
+               :map minibuffer-local-map
+               ("C-r" . counsel-minibuffer-history))
+        :custom
+        (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
+        :config
+        (counsel-mode 1))
 
-    (use-package ivy-rich
+      (use-package ivy-rich
+        :after counsel
+        :init
+        (ivy-rich-mode 1))
+
+      ;; Use to prioritize command history based on usage.
+      (use-package ivy-prescient
       :after counsel
-      :init
-      (ivy-rich-mode 1))
-
-    ;; Use to prioritize command history based on usage.
-    (use-package ivy-prescient
-    :after counsel
-    :custom
-    (ivy-prescient-enable-filtering nil)
-    :config
-    ;; Uncomment the following line to have sorting remembered across sessions!
-    ;: (prescient-persist-mode 1)
-    (ivy-prescient-mode 1))
-
-    (use-package helpful
       :custom
-      (counsel-describe-function-function #'helpful-callable)
-      (counsel-describe-variable-function #'helpful-variable)
-      :bind
-      ([remap describe-function] . counsel-describe-function)
-      ([remap describe-command] . helpful-command)
-      ([remap describe-variable] . counsel-describe-variable)
-      ([remap describe-key] . helpful-key))
-
-    ;; Set up leader keys.
-    (use-package general
-      :demand t
+      (ivy-prescient-enable-filtering nil)
       :config
-      (general-define-key
-       :keymaps 'global
-       :prefix-map 'my/leader-map
-       :prefix "M-m")
+      ;; Uncomment the following line to have sorting remembered across sessions!
+      ;: (prescient-persist-mode 1)
+      (ivy-prescient-mode 1))
 
-      (general-create-definer my/leader
-        :keymaps 'my/leader-map)
+      (use-package helpful
+        :custom
+        (counsel-describe-function-function #'helpful-callable)
+        (counsel-describe-variable-function #'helpful-variable)
+        :bind
+        ([remap describe-function] . counsel-describe-function)
+        ([remap describe-command] . helpful-command)
+        ([remap describe-variable] . counsel-describe-variable)
+        ([remap describe-key] . helpful-key))
 
-      (global-set-key (kbd "M-i") #'back-to-indentation))
+      ;; Set up leader keys.
+      (use-package general
+        :demand t
+        :config
+        (general-define-key
+         :keymaps 'global
+         :prefix-map 'my/leader-map
+         :prefix "M-m")
 
-    ;; Define a macro that builds sub-menus off M-m using `my/leader`
-    (defmacro +general-global-menu! (name prefix-key &rest body)
-      "Create a definer named my/global-NAME wrapping `my/leader`.
-    Create prefix map: my/global-NAME-map. Bind BODY under M-m PREFIX-KEY."
-      (declare (indent 2))
-      (let* ((sym (intern (format "my/global-%s" name)))
-             (prefix-map (intern (format "my/global-%s-map" name))))
-        `(progn
-           (general-create-definer ,sym
-             :wrapping my/leader
-             :prefix-map ',prefix-map
-             :prefix ,prefix-key
-             :wk-full-keys nil
-             "" '(:ignore t :which-key ,name))
-           (,sym ,@body))))
+        (general-create-definer my/leader
+          :keymaps 'my/leader-map)
 
-  ;; Bookmark leader keys.
-  (use-package bookmark
-    :straight nil
-    :custom
-    (bookmark-save-flag 1)   ;; autosave bookmarks after each change
-    (bookmark-sort-flag t)   ;; keep bookmarks sorted by name
-    :config
-    (+general-global-menu! "bookmark" "b"
-      "j" '(bookmark-jump       :which-key "jump")
-      "s" '(bookmark-set        :which-key "set")
-      "l" '(bookmark-bmenu-list :which-key "list")
-      "d" '(bookmark-delete     :which-key "delete")
-      "r" '(bookmark-rename     :which-key "rename")))
+        (global-set-key (kbd "M-i") #'back-to-indentation))
 
-  ;; Faster global chords
-  (require 'bookmark)
-  (global-set-key (kbd "C-x j")   #'bookmark-jump)       ;; jump
-  (global-set-key (kbd "C-x J")   #'bookmark-bmenu-list) ;; list/manage
-  (global-set-key (kbd "C-x M-j") #'bookmark-set)        ;; set
-  #+END_SRC
+      ;; Define a macro that builds sub-menus off M-m using `my/leader`
+      (defmacro +general-global-menu! (name prefix-key &rest body)
+        "Create a definer named my/global-NAME wrapping `my/leader`.
+      Create prefix map: my/global-NAME-map. Bind BODY under M-m PREFIX-KEY."
+        (declare (indent 2))
+        (let* ((sym (intern (format "my/global-%s" name)))
+               (prefix-map (intern (format "my/global-%s-map" name))))
+          `(progn
+             (general-create-definer ,sym
+               :wrapping my/leader
+               :prefix-map ',prefix-map
+               :prefix ,prefix-key
+               :wk-full-keys nil
+               "" '(:ignore t :which-key ,name))
+             (,sym ,@body))))
+
+    ;; Bookmark leader keys.
+    (use-package bookmark
+      :straight nil
+      :custom
+      (bookmark-save-flag 1)   ;; autosave bookmarks after each change
+      (bookmark-sort-flag t)   ;; keep bookmarks sorted by name
+      :config
+      (+general-global-menu! "bookmark" "b"
+        "j" '(bookmark-jump       :which-key "jump")
+        "s" '(bookmark-set        :which-key "set")
+        "l" '(bookmark-bmenu-list :which-key "list")
+        "d" '(bookmark-delete     :which-key "delete")
+        "r" '(bookmark-rename     :which-key "rename")))
+
+    ;; Faster global chords
+    (require 'bookmark)
+    (global-set-key (kbd "C-x j")   #'bookmark-jump)       ;; jump
+    (global-set-key (kbd "C-x J")   #'bookmark-bmenu-list) ;; list/manage
+    (global-set-key (kbd "C-x M-j") #'bookmark-set)        ;; set    
+#+END_SRC
 
 * System & OS Integration
 
@@ -728,11 +728,11 @@ Dedicated section for Org due to its scope of potential use and integration with
 Random notes, commands, quotes, etc. file.
 #+NAME: random-notes-dir
 #+BEGIN_SRC emacs-lisp :results value
-  (format "\"%s\"" "~/Documents/stuff/random_notes.org")
+  (format "\"%s\"" "~/Documents/Office-Docs (Global Sync)/random_notes.org")
 #+END_SRC
 
 #+RESULTS: random-notes-dir
-: "~/Documents/stuff/random_notes.org"
+: "~/Documents/Office-Docs (Global Sync)/random_notes.org"
 
 Random notes function for my mini knowledge base. I'll expand on this in the future.
 #+BEGIN_SRC emacs-lisp :eval never :noweb yes :tangle ./modules/org.el
@@ -862,7 +862,7 @@ Mu4e configuration.
               (select-frame-set-input-focus
                (window-frame (get-buffer-window bufname))))
           ;; Else create new frame and launch mu4e
-  	(let* ((frame (make-frame '((name . "mu4e")
+    	(let* ((frame (make-frame '((name . "mu4e")
                                       (width . 100)
                                       (height . 40)))))
             (select-frame-set-input-focus frame)
@@ -889,7 +889,36 @@ Mu4e configuration.
           (message-bcc . bbdb-complete-mail)))
 
     (define-key message-mode-map (kbd "TAB") 'bbdb-complete-mail)
- #+END_SRC
+
+  ;; --- Mu4e leader menu ---
+  (with-eval-after-load 'mu4e
+    ;; DWIM wrappers so reply/all/forward work from headers or view
+    (defun my/mu4e-reply ()      (interactive) (call-interactively #'mu4e-compose-reply))
+    (defun my/mu4e-reply-all ()  (interactive) (call-interactively #'mu4e-compose-wide-reply))
+    (defun my/mu4e-forward ()    (interactive) (call-interactively #'mu4e-compose-forward))
+
+    (+general-global-menu! "mail" "e"
+      ;; open / sync
+      "m" '(mu4e                       :which-key "open mu4e")
+      "u" '(mu4e-update-mail-and-index :which-key "update & index")
+      ;; compose
+      "c" '(mu4e-compose-new           :which-key "new email")
+      "r" '(my/mu4e-reply              :which-key "reply")
+      "a" '(my/mu4e-reply-all          :which-key "reply all")
+      "f" '(my/mu4e-forward            :which-key "forward")
+      ;; search
+      "s" '(mu4e-headers-search        :which-key "search")
+      "S" '(mu4e-headers-search-edit   :which-key "edit last search")))
+
+  ;; Compose-mode keys: send / draft / abort
+  (with-eval-after-load 'mu4e-compose
+    (general-define-key
+     :keymaps 'mu4e-compose-mode-map
+     :prefix "M-m"
+     "m s" '(message-send-and-exit :which-key "send & exit")
+     "m d" '(message-dont-send     :which-key "save draft")
+     "m A" '(message-kill-buffer   :which-key "abort")))
+#+END_SRC
 
 * Dev Environment
 
@@ -1376,4 +1405,34 @@ Deploy emacs configurations and mark deployment date.
         (insert (format "* Last Deployed\n\nDeployed at: %s\n" (current-time-string))))
 
       (message "Emacs config deployed to %s" modules-dir))))
+#+END_SRC
+
+Toggle me to the previous buffer but...filter out <buffers> and <dired lists>
+when toggling. So basically remove all the steps it took me to get from buffer a
+to buffer b when toggling back and forth.
+#+BEGIN_SRC emacs-lisp :eval never :noweb yes :tangle ./modules/my-functions.el
+  ;; Toggle to last buffer, but filter out dired and buffer list results
+  ;; when going back.
+  (require 'seq)      ;; built-in since Emacs 25
+
+  (defvar my/skip-back-buffer-modes
+    '(dired-mode ibuffer-mode Buffer-menu-mode)
+    "Major modes to skip when jumping back to the previous buffer.")
+
+  (defun my/other-buffer-skip-browsers ()
+    "Switch to the most recent buffer for this window that is not in
+  `my/skip-back-buffer-modes`. Falls back to `mode-line-other-buffer`."
+    (interactive)
+    (let* ((cands   (mapcar #'car (window-prev-buffers)))   ;; per-window history
+           (target  (seq-find
+                     (lambda (buf)
+                       (and (buffer-live-p buf)
+                            (with-current-buffer buf
+                              (not (apply #'derived-mode-p my/skip-back-buffer-modes)))))
+                     cands)))
+      (if target
+          (switch-to-buffer target)
+        (mode-line-other-buffer))))
+
+  (global-set-key (kbd "C-c b") #'my/other-buffer-skip-browsers)
 #+END_SRC

@@ -5,7 +5,7 @@
   (use-package org
          :defer t )
    
-   (setq my/random-notes-file "~/Documents/stuff/random_notes.org")
+   (setq my/random-notes-file "~/Documents/Office-Docs (Global Sync)/random_notes.org")
 
      ;; Org Capture Template
      (setq org-capture-templates

@@ -195,3 +195,28 @@ If a region is active, operate only within that region."
       (insert (format "* Last Deployed\n\nDeployed at: %s\n" (current-time-string))))
 
     (message "Emacs config deployed to %s" modules-dir))))
+
+;; Toggle to last buffer, but filter out dired and buffer list results
+;; when going back.
+(require 'seq)      ;; built-in since Emacs 25
+
+(defvar my/skip-back-buffer-modes
+  '(dired-mode ibuffer-mode Buffer-menu-mode)
+  "Major modes to skip when jumping back to the previous buffer.")
+
+(defun my/other-buffer-skip-browsers ()
+  "Switch to the most recent buffer for this window that is not in
+`my/skip-back-buffer-modes`. Falls back to `mode-line-other-buffer`."
+  (interactive)
+  (let* ((cands   (mapcar #'car (window-prev-buffers)))   ;; per-window history
+         (target  (seq-find
+                   (lambda (buf)
+                     (and (buffer-live-p buf)
+                          (with-current-buffer buf
+                            (not (apply #'derived-mode-p my/skip-back-buffer-modes)))))
+                   cands)))
+    (if target
+        (switch-to-buffer target)
+      (mode-line-other-buffer))))
+
+(global-set-key (kbd "C-c b") #'my/other-buffer-skip-browsers)
