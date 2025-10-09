@@ -61,11 +61,15 @@ All other variable definitions should be within their respective code blocks.
 Set evnrionment variables.
 #+BEGIN_SRC emacs-lisp :noweb yes  :tangle ./modules/env.el
   (setq my/env <<target-env()>>)
-  (setq server-name <<target-env()>>) 
+  (setq server-name <<target-env()>>)
+
+  (setq org-id-locations-file (expand-file-name ".org-id-locations" user-emacs-directory)
+        org-id-track-globally t
+        org-id-locations-file-relative t)
 #+END_SRC
 
 #+RESULTS:
-: emacs-prod
+: t
 
 Load my API keys.
 #+BEGIN_SRC emacs-lisp :noweb yes :tangle ./modules/env.el
