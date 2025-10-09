@@ -110,9 +110,15 @@ files and have run across a few issues in that if I want to
 eval-buffer one of these there may be dependencies that have not
 been loaded. As of 8/18/2025 I am an emacs noobie.
 #+BEGIN_SRC emacs-lisp :eval never :tangle init.el
+;; Only set user-emacs-directory if Emacs hasn't already done so
+;; (e.g. via --init-directory for the emacs-prod daemon).
+(when (or (not (boundp 'user-emacs-directory))
+          (null user-emacs-directory)
+          (string= user-emacs-directory "~/.emacs.d/"))
   (setq user-emacs-directory
-        (or (file-name-directory (or load-file-name buffer-file-name))
-            default-directory))
+        (file-name-as-directory
+         (or (and load-file-name (file-name-directory load-file-name))
+             default-directory))))
 
   (load (expand-file-name "modules/env.el" user-emacs-directory))
   (load (expand-file-name "modules/core.el" user-emacs-directory))
