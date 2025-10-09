@@ -68,8 +68,13 @@ Set evnrionment variables.
 : emacs-prod
 
 Load my API keys.
-#+BEGIN_SRC emacs-lisp :noweb yes  :tangle ./modules/env.el
-  (load-file (concat <<emacs-common-dir()>> "/api-keys.el"))
+#+BEGIN_SRC emacs-lisp :noweb yes :tangle ./modules/env.el
+  ;; Use the pre-defined noweb var <<emacs-common-dir>>.
+  ;; Falls back gracefully if the file isn't present.
+  (let* ((base <<emacs-common-dir()>>)
+         (file (expand-file-name "api-keys.el" base)))
+    (when (file-readable-p file)
+      (load file nil 'nomessage)))
 #+END_SRC
 
 #+RESULTS:
