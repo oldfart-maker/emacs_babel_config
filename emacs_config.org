@@ -128,7 +128,7 @@ been loaded. As of 8/18/2025 I am an emacs noobie.
   (load (expand-file-name "modules/dev.el" user-emacs-directory))
   (load (expand-file-name "modules/ai.el" user-emacs-directory))
   (load (expand-file-name "modules/system-os.el" user-emacs-directory))
-  (load (expand-file-name "modules/email.el" user-emacs-directory))
+;;  (load (expand-file-name "modules/email.el" user-emacs-directory))
   (load (expand-file-name "modules/editing-text.el" user-emacs-directory))  
   (load (expand-file-name "modules/my-functions.el" user-emacs-directory))
   (load (expand-file-name "modules/remote.el" user-emacs-directory))
