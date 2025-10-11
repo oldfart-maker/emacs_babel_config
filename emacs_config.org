@@ -1005,22 +1005,29 @@ My dev envrionments.
 
 My AI envrionments.
 #+BEGIN_SRC emacs-lisp :eval never :tangle ./modules/ai.el
-  ;;; ai.el --- AI config -*- lexical-binding: t; -*-
+;; -*- lexical-binding: t; -*-
 
-  (use-package chatgpt-shell
-    :ensure t
-    :config
-    (setq chatgpt-shell-save-session t)
-    (global-set-key (kbd "C-c g") #'chatgpt-shell)
-    (setq chatgpt-shell-openai-key my-openai-api-key)
-    (setq chatgpt-shell-anthropic-key my-anthropic-api-key)
-    (setq chatgpt-shell-google-key my-gemini-api-key))
+;; ChatGPT AI integration (lazy)
+(use-package chatgpt-shell
+  :straight (chatgpt-shell
+             :type git :host github :repo "xenodium/chatgpt-shell")
+  :commands (chatgpt-shell)          ;; autoload the entry command
+  :init
+  ;; keep secrets/keys set before load
+  (setq chatgpt-shell-openai-key    my-openai-api-key
+        chatgpt-shell-anthropic-key my-anthropic-api-key
+        chatgpt-shell-google-key    my-gemini-api-key
+        chatgpt-shell-save-session  t)
+  ;; this keybinding is also lazy; the package loads on first press
+  :bind (("C-c g" . chatgpt-shell)))
 
-  (use-package ollama-buddy
-    :ensure t
-    :commands (ollama-buddy-chat ollama-buddy-prompt-region ollama-buddy-prompt-buffer)
-    :config)
-        
+;; Ollama (lazy)
+(use-package ollama-buddy
+  :straight (ollama-buddy
+             :type git :host github :repo "n20o/ollama-buddy")
+  :commands (ollama-buddy-chat
+             ollama-buddy-prompt-region
+             ollama-buddy-prompt-buffer))
 #+END_SRC
 
 * Text editing
