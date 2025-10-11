@@ -120,12 +120,10 @@ been loaded. As of 8/18/2025 I am an emacs noobie.
            (or (and load-file-name (file-name-directory load-file-name))
                default-directory))))
 
-  ;; remove the immediate load:
-;; (load (expand-file-name "modules/ai.el" user-emacs-directory))
 
 ;; defer a bit so tangling/sync is definitely finished. This is to prevent a race condition that is loading ai.el during a nuke and full rebuild of emacs.
 (run-with-idle-timer
-  2 nil
+  5 nil
   (lambda ()
     (let ((ai (expand-file-name "modules/ai.el" user-emacs-directory)))
       (when (file-readable-p ai)
@@ -137,7 +135,7 @@ been loaded. As of 8/18/2025 I am an emacs noobie.
     (load (expand-file-name "modules/ui.el" user-emacs-directory))
     (load (expand-file-name "modules/org.el" user-emacs-directory))
     (load (expand-file-name "modules/dev.el" user-emacs-directory))
-    (load (expand-file-name "modules/ai.el" user-emacs-directory))
+  ;;  (load (expand-file-name "modules/ai.el" user-emacs-directory))
     (load (expand-file-name "modules/system-os.el" user-emacs-directory))
   ;;  (load (expand-file-name "modules/email.el" user-emacs-directory))
     (load (expand-file-name "modules/editing-text.el" user-emacs-directory))  
