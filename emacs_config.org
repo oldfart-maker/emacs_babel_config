@@ -1005,29 +1005,32 @@ My dev envrionments.
 
 My AI envrionments.
 #+BEGIN_SRC emacs-lisp :eval never :tangle ./modules/ai.el
-;; -*- lexical-binding: t; -*-
+  ;; -*- lexical-binding: t; -*-
 
-;; ChatGPT AI integration (lazy)
-(use-package chatgpt-shell
-  :straight (chatgpt-shell
-             :type git :host github :repo "xenodium/chatgpt-shell")
-  :commands (chatgpt-shell)          ;; autoload the entry command
-  :init
-  ;; keep secrets/keys set before load
+(require 'straight) ;; ensure available
+
+(defun my/open-chatgpt-shell ()
+  "Install/load chatgpt-shell on demand, then start it."
+  (interactive)
+  (straight-use-package
+   '(chatgpt-shell :type git :host github :repo "xenodium/chatgpt-shell"))
+  (require 'chatgpt-shell)
+  ;; your keys/vars (safe to set again)
   (setq chatgpt-shell-openai-key    my-openai-api-key
         chatgpt-shell-anthropic-key my-anthropic-api-key
         chatgpt-shell-google-key    my-gemini-api-key
         chatgpt-shell-save-session  t)
-  ;; this keybinding is also lazy; the package loads on first press
-  :bind (("C-c g" . chatgpt-shell)))
+  (call-interactively #'chatgpt-shell))
 
-;; Ollama (lazy)
-(use-package ollama-buddy
-  :straight (ollama-buddy
-             :type git :host github :repo "n20o/ollama-buddy")
-  :commands (ollama-buddy-chat
-             ollama-buddy-prompt-region
-             ollama-buddy-prompt-buffer))
+(global-set-key (kbd "C-c g") #'my/open-chatgpt-shell)
+
+(defun my/ollama-buddy-chat ()
+  "Install/load ollama-buddy on demand, then open chat."
+  (interactive)
+  (straight-use-package
+   '(ollama-buddy :type git :host github :repo "n20o/ollama-buddy"))
+  (require 'ollama-buddy)
+  (call-interactively #'ollama-buddy-chat))
 #+END_SRC
 
 * Text editing
