@@ -67,6 +67,14 @@ Set evnrionment variables.
 #+RESULTS:
 : emacs-prod
 
+#+BEGIN_SRC emacs-lisp :noweb yes  :tangle ./modules/env.el
+;; Workaround for Magit / Emacs 30 bug where `thisfile` is used as a
+;; dynamically-bound variable but never `defvar`'d.
+(defvar thisfile nil
+  "Dummy global used by some Magit autoloads. Defined here to avoid
+void-variable errors on timers.")
+#+END_SRC
+
 Load my API keys.
 #+BEGIN_SRC emacs-lisp :noweb yes :tangle ./modules/env.el
   ;; Use the pre-defined noweb var <<emacs-common-dir>>.
