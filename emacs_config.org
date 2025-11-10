@@ -108,24 +108,6 @@ and earl-init.el. I'm have not seen any benefit to using mulitple
 files and have run across a few issues in that if I want to
 eval-buffer one of these there may be dependencies that have not
 been loaded. As of 8/18/2025 I am an emacs noobie.
-#+BEGIN_SRC emacs-lisp :eval never  :tangle init.el
-    (setq debug-on-error t
-          init-file-debug t)
-
-(require 'trace)
-  (trace-function 'custom-initialize-set)
-
-        ;; Workaround for Magit / Emacs 30 bug where `thisfile` is used as a
-        ;; dynamically-bound variable but never `defvar`'d.
-        (defvar thisfile nil
-          "Dummy global used by some Magit autoloads. Defined here to avoid
-        void-variable errors on timers.")
-
-      (defvar symbol nil
-        "Dummy global used by some package code; defined to avoid
-      void-variable errors during startup.")
-#+END_SRC
-
 #+BEGIN_SRC emacs-lisp :eval never :tangle init.el
   ;; Only set user-emacs-directory if Emacs hasn't already done so
   ;; (e.g. via --init-directory for the emacs-prod daemon).
