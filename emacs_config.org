@@ -989,7 +989,13 @@ My dev envrionments.
   (require 'request)
   (require 'json)
 
-  ;; Git integration.
+  ;; Enable Eglot automatically for certain modes
+  (add-hook 'python-mode-hook #'eglot-ensure)
+
+#+END_SRC
+
+Git integration
+#+BEGIN_SRC emacs-lisp :eval never
   (use-package magit
     :config
     (setq magit-push-always-verify nil)
@@ -1003,10 +1009,6 @@ My dev envrionments.
   (use-package ghub
     :demand t
     :after magit)  
-
-  ;; Enable Eglot automatically for certain modes
-  (add-hook 'python-mode-hook #'eglot-ensure)
-
 #+END_SRC
 
 * AI
