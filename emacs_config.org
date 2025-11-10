@@ -94,9 +94,9 @@ Turn off yes/no prompt for evaluating org buffer.
 #+END_SRC
 
 Emacs Custom File
+Don't load it to keep all .el files generated from tangle. This will simply be a cache file for emacs settings.
 #+BEGIN_SRC emacs-lisp :tangle ./modules/env.el
   (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-  (load custom-file 'noerror)
 #+END_SRC
 
 #+RESULTS:
