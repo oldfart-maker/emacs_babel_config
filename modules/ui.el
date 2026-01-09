@@ -21,7 +21,7 @@
 
   ;; Set frame font and theme
   (set-face-attribute 'default nil :font "JetBrains Mono" :height my/default-font-size)
-  (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height my/default-font-size)
+  (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height my/default-font-size)
   (set-face-attribute 'variable-pitch nil :font "Cantarell" :height my/default-variable-font-size :weight 'regular)
 
   ;; Apply frame transparency

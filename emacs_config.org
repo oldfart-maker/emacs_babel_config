@@ -100,6 +100,7 @@ Don't load it to keep all .el files generated from tangle. This will simply be a
 #+END_SRC
 
 #+RESULTS:
+: /home/username/.emacs.d/custom.el
 
 * Init.el and Early-Init.el configurations.
 This is my first literate config. I used seperate .el files based on
@@ -990,7 +991,10 @@ Git integration (disabled - cannot load)
 
   (use-package ghub
     :demand t
-    :after magit)  
+    :after magit)
+
+;; Enable Eglot automatically for certain modes
+(add-hook 'python-mode-hook #'eglot-ensure)
 #+END_SRC
 
 * AI
