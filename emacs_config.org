@@ -978,7 +978,7 @@ My dev envrionments.
 #+END_SRC
 
 Git integration (disabled - cannot load)
-#+BEGIN_SRC emacs-lisp :eval never
+#+BEGIN_SRC emacs-lisp :eval never :tangle ./modules/dev.el
   (use-package magit
     :config
     (setq magit-push-always-verify nil)
